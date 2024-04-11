@@ -7,7 +7,7 @@
 ##  Purpose: Generate files needed to help Microsoft Support with customer support cases.  Data is NOT auto uploaded you must zip up the folder and the subfolder generated.
 ##
 ##  Version: 1.1
-##  Last Modified: 4 April 2024
+##  Last Modified: 10 April 2024
 #########################################################################################
 
 $wsid         = "########-####-####-####-############"   ## workspace ID is available from Log analytics workspace overview page
@@ -19,7 +19,7 @@ $outputFolder = "c:\MicrosoftSupportLogs"               ## Script automatically 
 ##  Update the line above as needed.  
 #########################################################################################
 $GetUpdateInfo = $true
-$version = "4 April 2024"
+$version = "10 April 2024"
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 $CRLF = "`r`n"   ## 13 + 10
