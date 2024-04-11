@@ -1,2 +1,5 @@
-# About
-Script creates C:\MicrosoftSupportLogs_computerName to capture diagnostic information to assist with Azure Arc, Update Manager, Automation, Update Management, Guest Configuration Policies
+## Quick Download
+[https://aka.ms/MicrosoftSupportLogs](https://aka.ms/MicrosoftSupportLogs)
+
+## About
+This PowerShell script is designed to collect and generate diagnostic files for Microsoft Support, specifically from a system running Windows. It captures a wide range of data including network connectivity checks, installed software updates, environmental variables, system services, event logs, and more, storing them in the specified output folder (`C:\MicrosoftSupportLogs`). The script checks for system prerequisites like TLS 1.2 support, and validates the regional settings for Azure automation accounts. It includes functionalities for handling files and directories, executing commands and capturing their output, and even managing Windows updates. A notable feature is its capability to differentiate and handle updates, excluding Defender updates from the primary list but keeping track of the most recent ones. The data is not automatically uploaded but requires zipping and manual submission to Microsoft Support. This script is a comprehensive tool for system diagnostics, aimed at facilitating the support process by gathering relevant system information and logs.
