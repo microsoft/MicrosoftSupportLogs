@@ -1,14 +1,14 @@
 #########################################################################################
-##  Created by AustinM                Last Modified:  31 Mar 2024
+##  Created by: Austin Mack
+##  Modified by: Blake Drumm (blakedrumm@microsoft.com)
 ##
 ##  Please zip up all of the output in the c:\MicrosoftSupportLogs and subfolders to Microsoft Support 
 ##
-##	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-##	The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-##  THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-##  
-##  Purpose: Generate files needed to help Microsoft Support with customer support cases.  Data is NOT auto uploaded you must zip up the folder and the subfolder generated
+##  Purpose: Generate files needed to help Microsoft Support with customer support cases.  Data is NOT auto uploaded you must zip up the folder and the subfolder generated.
 ##
+##  Version: 1.0
+##  Last Modified: 4 April 2024
+#########################################################################################
 
 $wsid         = "########-####-####-####-############"   ## workspace ID is available from Log analytics workspace overview page
 $aaid         = "########-####-####-####-############"   ## Automation ID is included in the on the URL field under Keys under the autoamtion account
@@ -19,7 +19,7 @@ $outputFolder = "c:\MicrosoftSupportLogs"               ## Script automatically 
 ##  Update the line above as needed.  
 #########################################################################################
 $GetUpdateInfo = $true
-$version = "31 Mar 2024"
+$version = "4 April 2024"
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 $CRLF = "`r`n"   ## 13 + 10
@@ -751,3 +751,25 @@ $ClientApplicationID >> $UpdateInfo
 start ($outputFolder+".")
 Write-Verbose -verbose "Please zip up $outputFolder and all of the subfolders in it and upload the zip file to Microsoft transfer site"
 "== " + (Get-date).tostring() + " Done" 
+
+##  MIT License
+##
+##  Copyright (c) Microsoft
+##  
+##  Permission is hereby granted, free of charge, to any person obtaining a copy
+##  of this software and associated documentation files (the "Software"), to deal
+##  in the Software without restriction, including without limitation the rights
+##  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+##  copies of the Software, and to permit persons to whom the Software is
+##  furnished to do so, subject to the following conditions:
+##  
+##  The above copyright notice and this permission notice shall be included in all
+##  copies or substantial portions of the Software.
+##  
+##  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+##  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+##  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+##  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+##  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+##  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+##  SOFTWARE.
