@@ -57,7 +57,7 @@ function CopyFile($SourceFile,$DestinationFolder) {
     copy $sourceFile ($DestinationFolder + $SourcefileBaseName + "_" + $DateTime + $SourcefileExtension)
     $cmd = "copy " + $sourceFile + " " + ($DestinationFolder + $SourcefileBaseName + "_" + $DateTime + $SourcefileExtension)
     Write-verbose -Verbose $cmd  } else
-  { "'$SourceFile' was not found on computer $($env:COMPUTERNAME).  depeding on the system this may be expected" >> ($DestinationFolder + "NotFoundFiles.txt") }
+  { "'$SourceFile' was not found on computer $($env:COMPUTERNAME). Depending on the system this may be expected" >> ($DestinationFolder + "NotFoundFiles.txt") }
 }
 
 Function CreateFolder($path)       # Create the entire Folder path if missing
