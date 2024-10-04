@@ -721,12 +721,12 @@ NOTE: The Windows Update Service is used to install updates, however it is the C
       can improve the table below please email AustinM
 
 
-ClientApplicationID                             Process initating the request to the Windows Update service
+ClientApplicationID                             Process initiating the request to the Windows Update service
 ===================                             =================================================================================
 UpdateManagment_Patch-MicrosoftOMSComputer      Azure Update management v1 initiating Windows Update Service to install update(s)
 Windows Defender                                update initiated by Windows Defender on the local system
 MoUpdateOrchestrator	                        Windows
-Update	                                        ??? (I believe thisis local Windows)
+Update	                                        ??? (I believe this is local Windows)
 CcmExec	                                        SMS (Systems Management Server) Agent Host service
 UpdateOrchestrator                              Update Orchestrator Service - Manages Windows Updates. 
 UpdateAgentLCU	                                used to install servicing stack updates.   
@@ -735,7 +735,7 @@ WindowsOsUpdateExtension                        Azure ARC Update Manager
 OperationalInsight                              ??? 
 SqlIaaSExtension.Service.exe	                Azure SQL Virtual Machine - Updates  
 wusa	                                        Windows Update Standalone Installer
-UpdateManagementActionExec.exe	                VMguest patching - c:\packages\plugins\Microsoft.SoftwareUpdateManagement.Windows.OSUpdateExtension\UpdateManagementActionExec.exe
+UpdateManagementActionExec.exe	                VMguest patching - C:\packages\plugins\Microsoft.SoftwareUpdateManagement.Windows.OSUpdateExtension\UpdateManagementActionExec.exe
 
 If you do not want Azure VMGuest Patching to randomly install updates after 10 PM local Regional time change the system to "Customer managed Schedules" in Update Manager
 
