@@ -716,7 +716,7 @@ If ($GetUpdateInfo)
   $last2DefenderUpdates >> $UpdateInfo
   $ClientApplicationID = @'
 
-NOTE: The Windows Update Service is used to install updates, however it is the ClientApplicaztionID that initiates the request to the Windows Update Service. 
+NOTE: The Windows Update Service is used to install updates, however it is the ClientApplicationID that initiates the request to the Windows Update Service. 
       The following Table can be used to help establish the application that initiated the request to the Windows Update Service.  If you have information that 
       can improve the table below please email AustinM
 
