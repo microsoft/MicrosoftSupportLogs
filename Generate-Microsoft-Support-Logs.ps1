@@ -15,6 +15,11 @@
     Last Modified: 4 October 2024
 
     ----------------------------------------------------------------------------
+    Change Log
+    ----------------------------------------------------------------------------
+    October 4th, 2024 - Blake Drumm (blakedrumm@microsoft.com): Fixed spelling errors and incorporated Troubleshoot-WindowsUpdateAgentRegistration (https://www.powershellgallery.com/packages/Troubleshoot-WindowsUpdateAgentRegistration/1.1/Content/Troubleshoot-WindowsUpdateAgentRegistration.ps1) into main script
+
+    ----------------------------------------------------------------------------
 
     MIT License
     
