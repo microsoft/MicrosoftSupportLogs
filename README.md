@@ -20,6 +20,6 @@ All collected data is stored in the specified output folder (`C:\MicrosoftSuppor
 - **Windows Updates Management**: Differentiates and handles updates, excluding Defender updates from the primary list but tracking the most recent ones.
 
 ### Usage
-The script is a comprehensive diagnostic tool that facilitates the support process by gathering all relevant system information and logs. Note that data is not automatically uploaded; it requires manual zipping and submission to Microsoft Support.
+The script is a comprehensive diagnostic tool that facilitates the support process by gathering all relevant system information and logs. Note that data is not automatically uploaded; it requires manual submission to Microsoft Support.
 
 This tool aims to simplify and enhance the efficiency of the diagnostic process for Microsoft Support, providing a thorough collection of system information necessary for troubleshooting.
