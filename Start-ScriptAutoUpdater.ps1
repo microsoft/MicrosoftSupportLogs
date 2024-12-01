@@ -4,9 +4,9 @@
         # The GitHub API URL to fetch the latest release information
         [string]$RepoURL = 'https://api.github.com/repos/microsoft/MicrosoftSupportLogs/releases/latest',
         # The name of the script file to update
-        [string]$ScriptName = 'Generate-Microsoft-Support-Logs.ps1',
+        [string]$ScriptName = 'Generate-Microsoft-Support-Logs*.ps1',
         # The pattern to match the asset in the release assets
-        [string]$AssetPattern = 'Generate-Microsoft-Support-Logs.ps1*'
+        [string]$AssetPattern = 'Generate-Microsoft-Support-Logs.zip*'
     )
     BEGIN {
         # Function to generate a timestamp for log messages
@@ -163,7 +163,7 @@
             if ([version]$scriptVersion -gt [version]$latestReleaseVersion) {
                 # If the local version is newer than the latest release, it's a development build
                 $status = "DEVELOPMENT BUILD"
-				$message = "You are currently on a development build of $($content.Name) last modified on $(($scriptContent | Select-String -Pattern 'Last Modified: (.*)' | ForEach-Object { $_.Matches[0].Groups[1].Value }).Trim())"
+				$message = "You are currently on a development build of $($content.Name) last modified on $(($scriptContent | Select-String -Pattern 'Last Modified: (.*)' | ForEach-Object { $_.Matches[0].Groups[1].Value } | Select-Object -First 1).Trim())"
 				
                 # Display the status message with yellow header color
                 Show-VersionStatus -Status $status -Message $message -HeaderColor Yellow -ContentColor White
