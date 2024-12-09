@@ -9,7 +9,7 @@ This PowerShell script is crafted to streamline the collection and generation of
 - Environmental variables
 - System services
 - Event logs
-- And more..
+- And much more..
 
 All collected data is stored in the specified output folder (`C:\MicrosoftSupportLogs`).
 
