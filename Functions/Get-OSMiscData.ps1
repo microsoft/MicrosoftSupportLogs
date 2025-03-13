@@ -16,6 +16,115 @@ Get-ChildItem env: | Format-Table -AutoSize | Out-FileWithErrorHandling -FilePat
 } | Out-FileWithErrorHandling -FilePath $ENVfileoutput -Append
 #endregion Copy OS Miscellaneous Logs
 
+#region Gather Roles and Features
+
+$GetWindowsFeatureCommand = Get-Command -Name Get-WindowsFeature -ErrorAction SilentlyContinue
+if ($GetWindowsFeatureCommand)
+{
+	Write-Console -Text "Gathering Roles and Features" -ForegroundColor Cyan
+	
+	# 1. Gather all features once
+	$AllFeatures = Get-WindowsFeature | Select-Object *
+	
+	# 2. Build a lookup hashtable for quick Name -> Feature object lookups
+	$featuresByName = @{ }
+	foreach ($f in $AllFeatures)
+	{
+		$featuresByName[$f.Name] = $f
+	}
+	
+	# 3. Filter only installed features
+	$FeaturesInstalled = $AllFeatures | Where-Object { $_.InstallState -eq "Installed" } | Select-Object *
+	
+	$OutputArray = @()
+	$WindowsVersion = (Get-ComputerInfo).WindowsProductName
+	
+	foreach ($Feature in $FeaturesInstalled)
+	{
+		if ($Feature.SubFeatures.Count -gt 0)
+		{
+			# Instead of calling Get-WindowsFeature again, use the lookup
+			$SubFeaturesTable = $Feature.SubFeatures |
+			ForEach-Object { $featuresByName[$_] } |
+			Select-Object Name, DisplayName |
+			Format-Table -AutoSize |
+			Out-String
+			
+			$CleanedLines =
+			$SubFeaturesTable -split "`r?`n" |
+			Where-Object { $_ -notmatch '^\s*$' }
+			
+			$SubFeaturesFormatted = $CleanedLines -join "`r`n"
+			
+			if ($Feature.AdditionalInfo.MajorVersion -eq 0 -and $Feature.AdditionalInfo.MinorVersion -eq 0)
+			{
+				$VersionString = "$WindowsVersion - Base Version"
+			}
+			else
+			{
+				$VersionString = "$($Feature.AdditionalInfo.MajorVersion).$($Feature.AdditionalInfo.MinorVersion)"
+			}
+			
+			$OutputArray += [pscustomobject]@{
+				Name	    = $Feature.Name
+				DisplayName = $Feature.DisplayName
+				Version	    = $VersionString
+				SubFeatures = $SubFeaturesFormatted.Trim()
+			}
+		}
+		else
+		{
+			if ($Feature.AdditionalInfo.MajorVersion -eq 0 -and $Feature.AdditionalInfo.MinorVersion -eq 0)
+			{
+				$VersionString = "$WindowsVersion - Base Version"
+			}
+			else
+			{
+				$VersionString = "$($Feature.AdditionalInfo.MajorVersion).$($Feature.AdditionalInfo.MinorVersion)"
+			}
+			
+			$OutputArray += [pscustomobject]@{
+				Name	    = $Feature.Name
+				DisplayName = $Feature.DisplayName
+				Version	    = $VersionString
+				SubFeatures = '<empty>'
+			}
+		}
+	}
+	
+	$OutputArray = $OutputArray | Sort-Object Name, DisplayName
+}
+else
+{
+	Write-Console -Text "Unable to gather the Roles and Features" -ForegroundColor Red
+}
+
+#region Format and Write to File
+
+if ($OutputArray)
+{
+	$rolesAndFeaturesOutputDirectory = Join-Path $miscFolder "Roles-and-Features.txt"
+	
+	# Convert final output to a single string
+	$finalTable = $OutputArray |
+	Select-Object Name, DisplayName, Version, SubFeatures |
+	Format-Table -AutoSize -Wrap |
+	Out-String -Width 4096
+	
+	# Remove all lines that are only whitespace
+	$cleanedFinalTable =
+	$finalTable -split "`r?`n" |
+	Where-Object { $_ -notmatch '^\s*$' } |
+	Out-String
+	
+	# Pipe the cleaned text to the file
+	$cleanedFinalTable.Replace("                                                                                                                               ","") | Out-FileWithErrorHandling -FilePath $rolesAndFeaturesOutputDirectory -Force -Width 4096
+}
+
+#endregion Format and Write to File
+
+#endregion Gather Roles and Features
+
 #region Services Details
 Write-Console -MessageSegments @(
 	@{ Text = "Gathering Services details"; ForegroundColor = "Cyan" }
@@ -24,7 +133,16 @@ $servicestxt = "$miscFolder`services.txt"
 Try
 {
 	"================================================================================================================$script:CRLF`== Summary of a few services at UTC time: $(Time-Stamp -UniversalTime)$script:CRLF`----------------------------------------------------------" | Out-FileWithErrorHandling -FilePath $servicestxt
-	Get-Service healthservic*, HybridWorker*, ExtensionServi*, GCArcServi*, himd*, *gateway | Sort-Object DisplayName | Format-Table -AutoSize | Out-FileWithErrorHandling -FilePath $servicestxt -Append
+	$servicesToCheck = Get-Service healthservic*, HybridWorker*, ExtensionServi*, GCArcServi*, himd*, *gateway
+	if ($servicesToCheck)
+	{
+		$servicesToCheck | Sort-Object DisplayName | Format-Table -AutoSize | Out-FileWithErrorHandling -FilePath $servicestxt -Append
+	}
+	else
+	{
+		Write-Console -Text "Did not find any of the typical services we check for." -ForegroundColor DarkYellow
+	}
+	
 	$serviceDetails = Get-CimInstance Win32_Service
 	# Get the total number of services
 	$serviceCount = $serviceDetails.Count
@@ -286,6 +404,7 @@ catch
 	# Log an error if Win32_OperatingSystem retrieval fails
 	$errorObject = [PSCustomObject]@{
 		"Computer Name" = $([System.Net.Dns]::GetHostByName(($env:computerName)).HostName)
+		"Current User"  = $runningas
 		"OS Version"    = "Unable to retrieve OS information"
 		"Memory Utilized (GB)" = "Unknown"
 		"System Uptime" = "Unknown"
@@ -306,6 +425,7 @@ if ($win32OS)
 {
 	$infoObject = ([PSCustomObject]@{
 			"Computer Name" = $([System.Net.Dns]::GetHostByName(($env:computerName)).HostName)
+			"Current User"  = $runningas
 			"OS Version"    = "$($win32OS.Caption) [$($win32OS.OSArchitecture)] ($($win32OS.Version))"
 			"Memory Utilized (GB)" = "$win32OS_MemoryUtilized"
 			"System Uptime" = $SystemUptime

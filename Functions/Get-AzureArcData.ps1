@@ -30,6 +30,89 @@ if ($azcmagentPath)
 		Create-Folder $arcFolder
 		& $azcmagent show | Out-FileWithErrorHandling -Width 2048 -Encoding utf8 -Force -FilePath "$arcFolder\Azcmagent_show.txt"
 		
+		#region HIMDS Metadata
+		# Define the HIMDS metadata endpoint without api-version
+		$HIMDSUri = "http://127.0.0.1:40342/metadata/instance"
+		
+		Write-Console -MessageSegments @(
+			@{ Text = "Gathering metadata from the "; ForegroundColor = "Cyan" },
+			@{ Text = "HIMDS API"; ForegroundColor = "DarkYellow" }
+		)
+		
+		# Attempt to fetch metadata to determine supported API versions
+		try
+		{
+			# Try to fetch metadata without specifying an API version
+			Invoke-WebRequest -Uri $HIMDSUri -Headers @{ Metadata = "True" } -ErrorAction Stop
+		}
+		catch
+		{
+			# Capture the exception
+			$Exception = $_.ErrorDetails.Message | ConvertFrom-Json
+			
+			# Try to get the response body if available
+			$ErrorMessage = $Exception.error_description
+			
+			if (-not $ErrorMessage)
+			{
+				# Fallback to exception message if response body is empty
+				$ErrorMessage = $Exception.Message
+			}
+			
+			Write-Verbose "Captured Response Body or Message: $ErrorMessage"
+			
+			# Check HTTP headers for additional information
+			if ($Exception.Response)
+			{
+				$ResponseHeaders = $Exception.Response.Headers
+				Write-Verbose "Captured Response Headers:"
+				$ResponseHeaders | ForEach-Object { "$($_): $($ResponseHeaders[$_])" }
+			}
+			
+			# Match the supported API versions in the error message or body
+			if ($ErrorMessage -match "Supported are (.+)")
+			{
+				# Extract the list of supported versions
+				$SupportedVersions = $Matches[1] -split " "
+				
+				# Sort the versions as strings in descending order
+				$LatestApiVersion = $SupportedVersions | Sort-Object -Descending | Select-Object -First 1
+				
+				Write-Verbose "Latest API version detected: $LatestApiVersion"
+				
+				# Now fetch metadata using the latest version
+				$MetadataUri = "$HIMDSUri`?api-version=$LatestApiVersion"
+				try
+				{
+					$himdsMetadata = ((Invoke-WebRequest -ErrorAction Stop -Uri $MetadataUri -Headers @{ Metadata = "True" }).Content | ConvertFrom-Json).compute
+					
+					# Display the results
+					if ($himdsMetadata)
+					{
+						Write-Verbose "HIMDS metadata: $himdsMetadata"
+					}
+					else
+					{
+						Write-Verbose "HIMDS metadata is unavailable."
+					}
+				}
+				catch
+				{
+					Write-Verbose "Failed to query metadata with the latest API version. Error: $_"
+				}
+			}
+			else
+			{
+				Write-Verbose "Failed to extract supported API versions from the response body or message."
+			}
+		}
+		#endregion HIMDS Metadata
+		
+		Write-Console -MessageSegments @(
+			@{ Text = "Gathering: "; ForegroundColor = "Cyan" },
+			@{ Text = "azcmagent check"; ForegroundColor = "DarkYellow" }
+		)
+		
 		$his_ip = ([System.Net.Dns]::GetHostAddresses("gbl.his.arc.azure.com"))[0].IPAddressToString
 		
 		# Check if IP starts with 10 or 172 and run 'azcmagent check' accordingly with or without '--enable-pls-check' flag
@@ -37,11 +120,11 @@ if ($azcmagentPath)
 		{
 			if ($script:VerbosePreference -match "Continue|Stop")
 			{
-				& $azcmagent check --enable-pls-check --verbose | Out-FileWithErrorHandling -Width 2048 -Encoding utf8 -Force -FilePath $AzcmagentCheckFile
+				& $azcmagent check --location $himdsMetadata.location --enable-pls-check --verbose | Out-FileWithErrorHandling -Width 2048 -Encoding utf8 -Force -FilePath $AzcmagentCheckFile
 			}
 			else
 			{
-				& $azcmagent check --enable-pls-check | Out-FileWithErrorHandling -Width 2048 -Encoding utf8 -Force -FilePath $AzcmagentCheckFile
+				& $azcmagent check --location $himdsMetadata.location --enable-pls-check | Out-FileWithErrorHandling -Width 2048 -Encoding utf8 -Force -FilePath $AzcmagentCheckFile
 			}
 			
 		}
@@ -49,13 +132,12 @@ if ($azcmagentPath)
 		{
 			if ($script:VerbosePreference -match "Continue|Stop")
 			{
-				& $azcmagent check --verbose | Out-FileWithErrorHandling -Width 2048 -Encoding utf8 -Force -FilePath $AzcmagentCheckFile
+				& $azcmagent check --location $himdsMetadata.location --verbose | Out-FileWithErrorHandling -Width 2048 -Encoding utf8 -Force -FilePath $AzcmagentCheckFile
 			}
 			else
 			{
-				& $azcmagent check | Out-FileWithErrorHandling -Width 2048 -Encoding utf8 -Force -FilePath $AzcmagentCheckFile
+				& $azcmagent check --location $himdsMetadata.location | Out-FileWithErrorHandling -Width 2048 -Encoding utf8 -Force -FilePath $AzcmagentCheckFile
 			}
-			
 		}
 		
 		

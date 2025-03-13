@@ -72,7 +72,33 @@ param
 	[Alias('OutputPath', 'op', 'OutputDirectory', 'od')]
 	[string]$OutputFolder = "C:\MicrosoftSupportLogs",
 	[Alias('NoProgressBar', 'npb', 'ddpb')]
-	[switch]$DontDisplayProgressBar
+	[switch]$DontDisplayProgressBar,
+	[Alias('Location')]
+	[ValidateSet(
+				 'asiapacific', 'australiacentral', 'australiacentral2', 'australiaeast',
+				 'australiasoutheast', 'brazilsouth', 'brazilsoutheast', 'canadaeast',
+				 'canadacentral', 'centralindia', 'centralus', 'centralusstage',
+				 'centraluseuap', 'chinaeast2', 'chinanorth', 'chinanorth2',
+				 'chinanorth3', 'eastasia', 'eastasiastage', 'eastus', 'eastus2',
+				 'eastus2euap', 'eastus2stage', 'eastusstg', 'europe', 'france',
+				 'francecentral', 'francesouth', 'germany', 'germanynorth',
+				 'germanywestcentral', 'global', 'india', 'israel', 'israelcentral',
+				 'italy', 'italynorth', 'japan', 'japaneast', 'japanwest',
+				 'jioindiacentral', 'jioindiawest', 'korea', 'koreacentral',
+				 'koreasouth', 'mexicocentral', 'newzealand', 'newzealandnorth',
+				 'norway', 'norwayeast', 'norwaywest', 'northeurope',
+				 'northcentralus', 'northcentralusstage', 'poland', 'polandcentral',
+				 'qatar', 'qatarcentral', 'singapore', 'southafrica',
+				 'southafricanorth', 'southafricawest', 'southcentralus',
+				 'southcentralusstg', 'southindia', 'spaincentral', 'sweden',
+				 'swedencentral', 'switzerland', 'switzerlandnorth',
+				 'switzerlandwest', 'uaecentral', 'uaenorth', 'uksouth',
+				 'ukwest', 'unitedstates', 'usgov', 'usgovarizona',
+				 'usgovtexas', 'usgovvirginia', 'westcentralus', 'westeurope',
+			  'westindia', 'westus', 'westus2', 'westus3', 'westusstage', 'none'
+	)]
+	[string]$AzureLocation = 'none',
+	[switch]$NetworkTrace
 )
 BEGIN
 {
@@ -80,6 +106,7 @@ BEGIN
 	{
 		Write-Console $_ -ForegroundColor Red
 	}
+		
 	#Start-Transcript -Path "C:\Temp\script-transcript.txt" -Force
 	#region Script version
 	$version = "DevelopmentVersion"
@@ -95,9 +122,21 @@ BEGIN
 	}
 	$scriptname = $((Get-PSCallStack -ErrorAction SilentlyContinue -Verbose:$VerbosePreference | Select-Object -First 1).Command)
 	
+	if (($version -eq ("Development" + "Version")) -and (-NOT (Test-Path "$ScriptPath\Functions")))
+	{
+		Write-Warning "Unable to continue because the script was copied from GitHub instead of downloaded from the release. Please download the latest release here: https://aka.ms/MicrosoftSupportScripts"
+		break
+	}
+	
 	#region Global Functions
 	. "$ScriptPath\Functions\GlobalFunctions.ps1"
 	#endregion Global Functions
+	
+	if (-NOT (Test-Path Function:\Write-Console))
+	{
+		Write-Warning "Unable to continue because the script was copied from GitHub instead of downloaded from the release. Please download the latest release here: https://aka.ms/MicrosoftSupportScripts"
+		break
+	}
 	
 	Write-ScriptProgress -Activity 'Gathering data' -PercentComplete 1
 	
@@ -127,6 +166,30 @@ BEGIN
 		}
 	}
 	Write-Verbose "Arguments passed to script: $ScriptPassedArgs"
+	
+	# Check if running as administrator
+	if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))
+	{
+		$nopermission = "Insufficient permissions to run this script. Attempting to open the PowerShell script ($ScriptPath) as administrator."
+		Write-Warning $nopermission
+		
+		# Relaunch the script as administrator
+		$command = @"
+cd '$ScriptPath';
+& '$ScriptPath\$scriptname' $argsString;
+"@
+		
+		Start-Process -FilePath "powershell.exe" -ArgumentList "-NoProfile", "-NoExit", "-Command", $command -Verb RunAs
+		exit
+	}
+	else
+	{
+		$permissiongranted = "Currently running as administrator - proceeding with script execution..."
+		Write-Console $permissiongranted -ForegroundColor Green
+		Create-Folder $outputFolder
+	}
+	
+	#endregion Check is Administrator
 	
 	#region Output Path
 	
@@ -202,30 +265,6 @@ if (-NOT $ScriptPath) {
 	)
 	#endregion Output Path
 	
-	# Check if running as administrator
-	if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))
-	{
-		$nopermission = "Insufficient permissions to run this script. Attempting to open the PowerShell script ($ScriptPath) as administrator."
-		Write-Warning $nopermission
-		
-		# Relaunch the script as administrator
-		$command = @"
-cd '$ScriptPath';
-& '$ScriptPath\$scriptname' $argsString;
-"@
-		
-		Start-Process -FilePath "powershell.exe" -ArgumentList "-NoProfile", "-NoExit", "-Command", $command -Verb RunAs
-		exit
-	}
-	else
-	{
-		$permissiongranted = "Currently running as administrator - proceeding with script execution..."
-		Write-Console $permissiongranted -ForegroundColor Green
-		Create-Folder $outputFolder
-	}
-	
-	#endregion Check is Administrator
-	
 	$previousProgressPreferenceSetting = $Global:ProgressPreference
 	
 	# Set the location for the console to the output folder
@@ -239,7 +278,100 @@ cd '$ScriptPath';
 	#region Variables
 	$wsid = "########-####-####-####-############" # Workspace ID from Log Analytics
 	$aaid = "########-####-####-####-############" # Automation ID from Automation Account
-	$location = "####" # Azure region abbreviation
+	# Map AzureLocation to short names using a switch statement
+	$azureLocationShortName = switch ($AzureLocation)
+	{
+		'asiapacific' { 'ap' }
+		'australiacentral' { 'ac' }
+		'australiacentral2' { 'cbr2' }
+		'australiaeast' { 'ae' }
+		'australiasoutheast' { 'ase' }
+		'brazilsouth' { 'brs' }
+		'brazilsoutheast' { 'brse' }
+		'canadaeast' { 'ce' }
+		'canadacentral' { 'cc' }
+		'centralindia' { 'cid' }
+		'centralus' { 'cus' }
+		'centralusstage' { 'cusstage' }
+		'centraluseuap' { 'cus2' }
+		'chinaeast2' { 'sha2' }
+		'chinanorth' { 'bjb' }
+		'chinanorth2' { 'bjs2' }
+		'chinanorth3' { 'cnn3' }
+		'eastasia' { 'ea' }
+		'eastasiastage' { 'eas' }
+		'eastus' { 'eus' }
+		'eastus2' { 'eus2' }
+		'eastus2euap' { 'eus2euap' }
+		'eastus2stage' { 'eus2stage' }
+		'eastusstg' { 'eusstg' }
+		'europe' { 'eu' }
+		'france' { 'fr' }
+		'francecentral' { 'fc' }
+		'francesouth' { 'mrs' }
+		'germany' { 'de' }
+		'germanynorth' { 'den' }
+		'germanywestcentral' { 'dewc' }
+		'global' { 'gl' }
+		'india' { 'in' }
+		'israel' { 'il' }
+		'israelcentral' { 'ilc' }
+		'italy' { 'it' }
+		'italynorth' { 'itn' }
+		'japan' { 'jp' }
+		'japaneast' { 'jpe' }
+		'japanwest' { 'jpw' }
+		'jioindiacentral' { 'jic' }
+		'jioindiawest' { 'jiw' }
+		'korea' { 'kr' }
+		'koreacentral' { 'kc' }
+		'koreasouth' { 'ps' }
+		'mexicocentral' { 'mc' }
+		'newzealand' { 'nz' }
+		'newzealandnorth' { 'nzn' }
+		'norway' { 'no' }
+		'norwayeast' { 'noe' }
+		'norwaywest' { 'now' }
+		'northeurope' { 'ne' }
+		'northcentralus' { 'ncus' }
+		'northcentralusstage' { 'ncusstg' }
+		'poland' { 'pl' }
+		'polandcentral' { 'plc' }
+		'qatar' { 'qa' }
+		'qatarcentral' { 'qac' }
+		'singapore' { 'sg' }
+		'southafrica' { 'za' }
+		'southafricanorth' { 'san' }
+		'southafricawest' { 'saw' }
+		'southcentralus' { 'scus' }
+		'southcentralusstg' { 'scusstg' }
+		'southindia' { 'si' }
+		'spaincentral' { 'es' }
+		'sweden' { 'se' }
+		'swedencentral' { 'sec' }
+		'switzerland' { 'ch' }
+		'switzerlandnorth' { 'chn' }
+		'switzerlandwest' { 'chw' }
+		'uaecentral' { 'auh' }
+		'uaenorth' { 'uaen' }
+		'uksouth' { 'uks' }
+		'ukwest' { 'ukw' }
+		'unitedstates' { 'us' }
+		'usgov' { 'usg' }
+		'usgovarizona' { 'phx' }
+		'usgovtexas' { 'ussc' }
+		'usgovvirginia' { 'usge' }
+		'westcentralus' { 'wcus' }
+		'westeurope' { 'we' }
+		'westindia' { 'wi' }
+		'westus' { 'wus' }
+		'westus2' { 'wus2' }
+		'westus3' { 'usw3' }
+		'westusstage' { 'wusstg' }
+		'none' { 'none' }
+		default { Write-Error "Unknown Azure Location"; break }
+	}
+	#$azureLocationShortName = "####" # Azure region abbreviation
 	#endregion Variables
 	
 	Write-ScriptProgress -Activity 'Gathering data' -PercentComplete 4
@@ -259,9 +391,9 @@ cd '$ScriptPath';
 	Write-Verbose "Using highest SSL Security Protocol available [Net.ServicePointManager]::SecurityProtocol: $([Net.ServicePointManager]::SecurityProtocol)"
 	
 	# Validate Location
-	if ($location.Length -gt 4)
+	if ($azureLocationShortName.Length -gt 4)
 	{
-		Write-Verbose -Verbose "$location is WRONG. Please update to an abbreviated region name and re-run the script."
+		Write-Verbose -Verbose "$azureLocationShortName is WRONG. Please update to an abbreviated region name and re-run the script."
 		Write-Verbose -Verbose "Refer to: https://learn.microsoft.com/en-us/azure/automation/how-to/automation-region-dns-records#support-for-private-link"
 		Break
 	}
@@ -273,6 +405,45 @@ PROCESS
 {
 	Write-Console -Text "==========================================================" -NoTimestamp
 	Write-Console -Text "Starting data collection (v$version) on: $env:COMPUTERNAME" -ForegroundColor 'DarkCyan'
+	
+	#region Network Trace
+	if ($NetworkTrace)
+	{
+		# Variables
+		$TraceBasePath = "$outputFolder\NetworkTrace"
+		$TraceFilePath = "$TraceBasePath\trace.etl"
+		$TraceCabFilePath = "$TraceBasePath\trace.cab"
+		$MaxSize = 4096
+		
+		Create-Folder $TraceBasePath
+		
+		# Start the network trace
+		Write-Console "Starting network trace..." -ForegroundColor Cyan
+		Start-Process -FilePath "netsh" -ArgumentList "trace start capture=yes overwrite=yes maxsize=$MaxSize tracefile=$TraceFilePath scenario=InternetClient keywords=0xffffffffffffffff level=0xff" -NoNewWindow -Wait
+		
+		# Flush DNS cache
+		Write-Console "Flushing DNS cache..." -ForegroundColor Cyan
+		Start-Process -FilePath "ipconfig" -ArgumentList "/flushdns" -NoNewWindow -Wait
+		
+		Write-Console "Reproduce the issue now. Press Enter to stop the network trace."
+		Read-Host
+		
+		# Stop the network trace
+		Write-Console "Stopping network trace..." -ForegroundColor Cyan
+		Start-Process -FilePath "netsh" -ArgumentList "trace stop" -NoNewWindow -Wait
+		
+		# Wait for the trace to flush to disk
+		Write-Console "Waiting for the trace file to finish flushing to disk..." -ForegroundColor Cyan
+		while (-not (Test-Path $TraceCabFilePath))
+		{
+			Write-Console -NoNewLine -Text "."
+			Start-Sleep -Seconds 2
+		}
+		
+		Write-Console "Trace complete." -ForegroundColor Cyan
+	}
+	#endregion Network Trace
+	
 	
 	#region Who is running the script?
 	$runningas = $null
@@ -429,7 +600,7 @@ PROCESS
 	Write-ScriptProgress -Activity 'Gathering data' -PercentComplete 24
 	
 	#region Proxy Information
-	$ProxyFolder = "$outputFolder`ProxySettings\"
+	$ProxyFolder = "$outputFolder`Network\ProxySettings\"
 	Create-Folder $ProxyFolder
 	$OutputFile = "$ProxyFolder\Win-HTTP-Proxy.txt"
 	netsh Winhttp show proxy *> $OutputFile
@@ -1003,24 +1174,24 @@ PROCESS
 							if ($subStatusMessage.patchServiceUsed)
 							{
 								$Statusobjxx = [PSCustomObject]@{
-									Name		 	 = $JsonStatus.status.name
-									Status	     	 = $JsonStatus.status.status
-									Operation        = $JsonStatus.status.operation
+									Name			 = $JsonStatus.status.name
+									Status		     = $JsonStatus.status.status
+									Operation	     = $JsonStatus.status.operation
 									patchServiceUsed = $subStatusMessage.patchServiceUsed
-									Code		 	 = $JsonStatus.status.code
-									Message	     	 = $JsonStatus.status.formattedMessage.message
-									timestampUTC 	 = $JsonStatus.timestampUTC
+									Code			 = $JsonStatus.status.code
+									Message		     = $JsonStatus.status.formattedMessage.message
+									timestampUTC	 = $JsonStatus.timestampUTC
 								}
 							}
 							else
 							{
 								$Statusobjxx = [PSCustomObject]@{
-									Name		 	 = $JsonStatus.status.name
-									Status	     	 = $JsonStatus.status.status
-									Operation    	 = $JsonStatus.status.operation
-									Code		 	 = $JsonStatus.status.code
-									Message	     	 = ($JsonStatus.status.formattedMessage.message).Replace("`"[","").Replace(".`"]","").Replace("].`"","")
-									timestampUTC 	 = $JsonStatus.timestampUTC
+									Name	  = $JsonStatus.status.name
+									Status    = $JsonStatus.status.status
+									Operation = $JsonStatus.status.operation
+									Code	  = $JsonStatus.status.code
+									Message   = ($JsonStatus.status.formattedMessage.message).Replace("`"[", "").Replace(".`"]", "").Replace("].`"", "")
+									timestampUTC = $JsonStatus.timestampUTC
 								}
 							}
 							

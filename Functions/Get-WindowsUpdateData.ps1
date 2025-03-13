@@ -135,7 +135,7 @@ AutomaticUpdatesWuApp                           Windows Update Application - Com
 Azure VM Guest Patching                         Azure VM Guest Patching feature initiating updates on Azure virtual machines.
 CcmExec                                         Configuration Manager (SCCM) Client Agent Host service (Microsoft Endpoint Configuration Manager client), responsible for initiating software update scans and installation.
 ITSecMgmt                                       Windows Security (Defender) - Initiates security updates and scans
-MoUpdateOrchestrator                            Modern Update Orchestrator - Part of the Windows Update infrastructure, managing updates (Windows 10 and later).
+MoUpdateOrchestrator                            Modern Update Orchestrator - Part of the Windows Update system that handles updates for Windows 10 and newer versions, including Windows Server 2016 and later.
 OperationalInsights                             Azure Log Analytics Agent (formerly OMS) initiating updates via Update Management
 SqlIaaSExtension.Service.exe                    Azure SQL Virtual Machine Extension - Manages SQL Server updates
 SUS Client                                      Software Update Services Client - Refers to Windows Server Update Services (WSUS) client interactions
@@ -274,6 +274,14 @@ AUOptions (REG_DWORD):
 
 ---------------------------------
 
+ScheduledInstallEveryWeek (REG_DWORD):
+
+0: Do not enforce a once-per-week scheduled installation.
+1: Enforce automatic installations once a week on the specified day and time.
+(Requires ScheduledInstallDay and ScheduledInstallTime to be set.)
+
+---------------------------------
+
 ScheduledInstallDay (REG_DWORD):
 
 0: Every day.
@@ -313,6 +321,10 @@ NoAutoRebootWithLoggedOnUsers (REG_DWORD):
 	#endregion Windows Update Registry
 	
 	#region Copy CBS Logs
-	Copy-File -SourcePath "C:\windows\logs\cbs\*.log" -DestinationPath "$WindowsUpdateFolder"
+	Copy-File -SourcePath "C:\windows\logs\cbs\*.log" -DestinationPath "$WindowsUpdateFolder\CBS"
 	#endregion Copy CBS Logs
+	
+	#region Copy DISM Logs
+	Copy-File -SourcePath "C:\windows\logs\DISM\*.log" -DestinationPath "$WindowsUpdateFolder\DISM" -MostRecentFileCount 10
+	#endregion Copy DISM Logs
 }

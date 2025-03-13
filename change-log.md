@@ -1,11 +1,30 @@
-﻿# Script Version: v1.3
+﻿# Script Version: v1.4
 
-***Last Updated: December 1st, 2024 @ 2:26 AM (EST)***
+***Last Updated: March 13th, 2025 @ 11:29 AM (EST)***
 
 ## Change Log
 
-### Changes
+#### Changes
+- [@blakedrumm] Added **ScheduledInstallEveryWeek** to `Update_Info.txt` file.
+- [@blakedrumm] Added an additional progress bar to add more details on Endpoint Network Check.
+- [@blakedrumm] Added DISM Logs to `<OutputPath>Windows_Update\DISM`.
+- [@blakedrumm] Added a check at the beginning of the script to verify that all required functions are available. This ensures the user did not copy the Generate-Microsoft-Support-Logs.ps1 script directly from GitHub. The script now requires downloading the release and cannot be run by simply copying and pasting.
+- [@blakedrumm] Added gathering currently configured Roles and Features.
+- [@blakedrumm] Added gathering HIMDS metadata from the local API.
+- [@blakedrumm] Added `-AzureLocation` and `-NetworkTrace` parameters.
+- [@blakedrumm] Fixed formatting of files output.
 
+---
+&nbsp; \
+&nbsp;
+
+# Script Version: v1.3
+
+***Last Updated: December 1st, 2024 @ 2:06 AM (EST)***
+
+## Change Log
+
+#### Changes
 - [@blakedrumm] Keep in mind I did not capture all the changes I made with this release as this was around a 90% rewrite.
 - [@blakedrumm] Added changelog to release.
 - [@blakedrumm] Moved the functions into separate folders when in development. This allows easier maintenance on the separate parts of the tool.
@@ -73,7 +92,7 @@
   - [@blakedrumm] Added VM Metadata to output. (`<OutputPath>\AzureVM\vm_metadata.json`)
   - [@blakedrumm] Added Azure Arc Connected Machine Agent folder to output. (`<OutputPath>\Azure_Arc\AzureConnectedMachineAgent`)
   - [@blakedrumm] Added Client Application ID's available to the Operating System. (`<OutputPath>\Windows_Update\Update_Info.txt`)
-  - [@blakedrumm] Renamed folder in output from `arc` to `Azure_Arc`.
+  - [@blakedrumm] Renamed folder in output from `arc` to `Azure Arc`.
   - [@blakedrumm] Added additional data to the `<OutputPath>\WindowsTime.txt` file. Also modified the output to make it easier to understand.
   - [@blakedrumm] Added comments and regions to the whole script for organization.
   - [@blakedrumm] Added check for Administrator at beginning of script. If script is not running as administrator, it will attempt to relaunch as Administrator.
@@ -119,8 +138,7 @@
 
 ## Change Log
 
-### Changes
-
+#### Changes
 - [@blakedrumm] Fixed spelling errors in the main script.
 
 
@@ -135,8 +153,7 @@
 
 ## Change Log
 
-### Changes
-
+#### Changes
 - Moved the license information to bottom of the script.
 - Added script version inside the script.
 

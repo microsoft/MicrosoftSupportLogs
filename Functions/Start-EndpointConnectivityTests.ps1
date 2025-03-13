@@ -53,8 +53,14 @@ function Get-FriendlyTlsVersion($tlsVersion)
 	}
 }
 
+$baseProgressBarValue = 10
+$targetCount = $MiscTargetarr.Count
+$targetCountProgressValue = 90 / $targetCount
+
 foreach ($MiscTargetEndPoint in $MiscTargetarr)
 {
+	Write-ScriptProgress -Activity '-- Network connectivity tests' -Id 1 -PercentComplete $baseProgressBarValue
+	$baseProgressBarValue = $baseProgressBarValue + $targetCountProgressValue
 	Write-Console -MessageSegments @(
 		@{ Text = "Testing connectivity to: "; ForegroundColor = "Gray" },
 		@{ Text = $MiscTargetEndPoint; ForegroundColor = "Cyan" },
@@ -85,10 +91,14 @@ foreach ($MiscTargetEndPoint in $MiscTargetarr)
 	# Initialize Connection Times Array and TLS Versions
 	$connectionTimes = @()
 	$tlsVersions = @()
+	$connectivityProgress = 10
 	
 	# Perform Connectivity Tests
 	for ($i = 1; $i -le $testCount; $i++)
 	{
+		#$connectivityProgress = $connectivityProgress + (Get-Random -Maximum 19 -Minimum 1)
+		$connectivityProgress = $connectivityProgress + (Get-Random -Maximum 4 -Minimum 1)
+		Write-ScriptProgress -Activity "---- Checking connectivity to '$ipAddress'" -Id 2 -PercentComplete $connectivityProgress
 		try
 		{
 			$tcpClient = New-Object System.Net.Sockets.TcpClient
@@ -98,6 +108,8 @@ foreach ($MiscTargetEndPoint in $MiscTargetarr)
 			$asyncResult = $tcpClient.BeginConnect($ipAddress, 443, $null, $null)
 			$success = $asyncResult.AsyncWaitHandle.WaitOne($timeout, $false)
 			$stopwatch.Stop()
+			
+			$connectivityProgress = $connectivityProgress + (Get-Random -Maximum 4 -Minimum 1)
 			
 			if ($success -and $tcpClient.Connected)
 			{
@@ -116,6 +128,7 @@ foreach ($MiscTargetEndPoint in $MiscTargetarr)
 					[System.Security.Authentication.SslProtocols]::Tls11 -bor `
 					[System.Security.Authentication.SslProtocols]::Tls
 					$sslStream.AuthenticateAsClient($MiscTargetEndPoint, $null, $allowedProtocols, $false)
+					$connectivityProgress = $connectivityProgress + (Get-Random -Maximum 4 -Minimum 1)
 					$tlsVersionRaw = $sslStream.SslProtocol.ToString()
 					$tlsVersion = Get-FriendlyTlsVersion $tlsVersionRaw
 					$tlsVersions += $tlsVersion
@@ -151,9 +164,11 @@ foreach ($MiscTargetEndPoint in $MiscTargetarr)
 				$tcpClient.Close()
 			}
 		}
+		$connectivityProgress = $connectivityProgress + (Get-Random -Maximum 4 -Minimum 1)
 		Start-Sleep -Milliseconds 500
 	}
-	
+	Write-ScriptProgress -Activity "---- Checking connectivity to '$ipAddress'" -Id 2 -PercentComplete 100 -Completed
+	Write-ScriptProgress -Activity '--- Network connectivity tests' -Id 1 -PercentComplete 70
 	# Calculate Average Connection Time and Determine Most Common TLS Version
 	if ($connectionTimes.Count -gt 0)
 	{
@@ -185,6 +200,7 @@ foreach ($MiscTargetEndPoint in $MiscTargetarr)
 			Status		   = "Connected"
 		}
 	}
+	Write-ScriptProgress -Activity 'Network connectivity tests' -Id 1 -PercentComplete 100 -Completed
 }
 
 $connectionResults | Format-Table | Out-FileWithErrorHandling -FilePath $TCPTest -Force

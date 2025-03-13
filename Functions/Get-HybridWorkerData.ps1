@@ -125,15 +125,15 @@ foreach ($endpoint in $jrdsArr)
 	}
 }
 
-# Ensure $aaid and $location are defined
-if ($aaid -and $location -and ($aaid -notlike "*####*") -and ($aaid -notin $jrdsArr))
+# Ensure $aaid and $AzureLocation are defined
+if ($aaid -and $AzureLocation -and ($aaid -notlike "none") -and ($aaid -notin $jrdsArr))
 {
-	Write-Verbose "Processing aaid and location: $aaid, $location"
+	Write-Verbose "Processing aaid and location: $aaid, $AzureLocation"
 	$FQDNs = @(
-		"$aaid.jrds.$location.azure-automation.net",
-		"$aaid.agentsvc.$location.azure-automation.net",
-		"$aaid.webhook.$location.azure-automation.net",
-		"$location-jobruntimedata-prod-su1.azure-automation.net"
+		"$aaid.jrds.$AzureLocation.azure-automation.net",
+		"$aaid.agentsvc.$AzureLocation.azure-automation.net",
+		"$aaid.webhook.$AzureLocation.azure-automation.net",
+		"$AzureLocation-jobruntimedata-prod-su1.azure-automation.net"
 	) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
 	
 	Write-Verbose "Constructed FQDNs:"

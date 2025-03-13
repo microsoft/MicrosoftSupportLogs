@@ -437,24 +437,21 @@ function Out-FileWithErrorHandling
 {
 	[CmdletBinding(DefaultParameterSetName = 'ByPath', SupportsShouldProcess = $true)]
 	param (
-		[Parameter(
-				   Mandatory = $false,
+		[Parameter(Mandatory = $false,
 				   ValueFromPipeline = $true,
 				   ValueFromPipelineByPropertyName = $true)]
 		[System.Object]$InputObject,
-		[Parameter(
-				   Position = 0,
+		[Parameter(Position = 0,
 				   Mandatory = $true,
 				   ParameterSetName = 'ByPath')]
 		[Alias('File')]
 		[string]$FilePath,
 		[switch]$Append,
 		[switch]$NoClobber,
-		[ValidateSet(
-					 'ascii', 'bigendianunicode', 'default', 'oem', 'string',
+		[ValidateSet('ascii', 'bigendianunicode', 'default', 'oem', 'string',
 					 'unicode', 'unknown', 'utf32', 'utf7', 'utf8', 'utf8bom', 'utf8nobom')]
 		[string]$Encoding = 'default',
-		[int]$Width,
+		[int]$Width = 4096,
 		[switch]$Force
 	)
 	
@@ -462,14 +459,15 @@ function Out-FileWithErrorHandling
 	{
 		try
 		{
-			$FilePath = [System.IO.Path]::GetFullPath($FilePath)
-			
-			# Initialize an array to collect all input
+			# Resolve the full path to the specified file.
+			$FullFilePath = [System.IO.Path]::GetFullPath($FilePath)
+			# Initialize an array to collect pipeline input.
 			$collectedInput = @()
 		}
 		catch
 		{
-			Write-Error "Failed to initialize file operation for '$FilePath'. Error: $_"
+			# If the file path resolution fails, display an error and stop.
+			Write-Error "Failed to initialize file operation for '$FilePath'. Error: $($_.Exception.Message)"
 			return
 		}
 	}
@@ -478,7 +476,7 @@ function Out-FileWithErrorHandling
 	{
 		try
 		{
-			# Collect each input object
+			# Append the current pipeline input object to the collection if it is not null.
 			if ($null -ne $InputObject)
 			{
 				$collectedInput += $InputObject
@@ -486,7 +484,8 @@ function Out-FileWithErrorHandling
 		}
 		catch
 		{
-			Write-Error "Failed to process input for '$FilePath'. Error: $_"
+			# If any error occurs while processing input, display an error.
+			Write-Error "Failed to process input for '$FilePath'. Error: $($_.Exception.Message)"
 		}
 	}
 	
@@ -494,32 +493,44 @@ function Out-FileWithErrorHandling
 	{
 		try
 		{
-			if ($PSCmdlet.ShouldProcess($FilePath, "Write content to file"))
+			# If NoClobber is specified and the file already exists, do not overwrite it.
+			if ($NoClobber -and (Test-Path $FullFilePath))
 			{
-				# Convert the collected input to a single string
-				$content = $collectedInput | Out-String
+				Write-Error "File '$FullFilePath' already exists and NoClobber is specified. No overwrite performed."
+				return
+			}
+			
+			# Check if the action should be performed as per the user's confirmation settings.
+			if ($PSCmdlet.ShouldProcess($FullFilePath, "Write content to file"))
+			{
+				# If Width is provided, configure Out-String to use that width.
+				$osParams = @{ }
+				if ($Width) { $osParams['Width'] = $Width }
 				
-				# Ensure the content is in clean ASCII format
-				$content = $content -replace '[^\x20-\x7E\r\n]', ''
+				# Convert the collected input into a single string.
+				$content = $collectedInput | Out-String @osParams
 				
-				# Write the content to file
+				# If required, uncomment the next line to remove non-ASCII characters:
+				# $content = $content -replace '[^\x20-\x7E\r\n]', ''
+				
+				# If Append is specified, append to the existing file; otherwise, overwrite/create new.
 				if ($Append)
 				{
-					$content | Add-Content -Path $FilePath -Force:$Force -Encoding $Encoding
+					Add-Content -Path $FullFilePath -Force:$Force -Encoding $Encoding -Value $content
 				}
 				else
 				{
-					$content | Set-Content -Path $FilePath -Force:$Force -Encoding $Encoding
+					Set-Content -Path $FullFilePath -Force:$Force -Encoding $Encoding -Value $content
 				}
 			}
 		}
 		catch
 		{
-			Write-Error "Failed to write to file '$FilePath'. Error: $_"
+			# If any error occurs during the file write operation, display an error.
+			Write-Error "Failed to write to file '$FullFilePath'. Error: $($_.Exception.Message)"
 		}
 	}
 }
-
 
 #region SSL Configuration Testing Functions
 
@@ -1076,7 +1087,8 @@ function Copy-File
 		[Alias('DestinationPath', 'Destination')]
 		[string]$DestinationFolder,
 		[switch]$changeFileName,
-		[switch]$Quiet
+		[switch]$Quiet,
+		[int]$MostRecentFileCount
 	)
 	
 	# Handle destination path
@@ -1370,7 +1382,7 @@ function Write-ScriptProgress
 	{
 		# Create a hashtable to hold the parameters
 		$params = @{
-			Activity = $Activity
+			Activity = $Activity + ": $PercentComplete`%"
 		}
 		
 		# Add parameters to the hashtable if they are provided
