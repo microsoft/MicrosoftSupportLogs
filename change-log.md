@@ -1,12 +1,24 @@
-﻿# Script Version: v1.4
+﻿# Script Version: v1.5
 
-***Last Updated: March 13th, 2025 @ 11:29 AM (EST)***
+***Last Updated: March 18th, 2024 @ 9:48 AM (EST)***
+
+## Change Log
+
+#### Changes
+- [@blakedrumm] Removed Network Trace parameter and functionality.
+
+---
+&nbsp; \
+&nbsp;
+
+# Script Version: v1.4
+
+***Last Updated: March 13th, 2024 @ 11:29 AM (EST)***
 
 ## Change Log
 
 #### Changes
 - [@blakedrumm] Added **ScheduledInstallEveryWeek** to `Update_Info.txt` file.
-- [@blakedrumm] Added an additional progress bar to add more details on Endpoint Network Check.
 - [@blakedrumm] Added DISM Logs to `<OutputPath>Windows_Update\DISM`.
 - [@blakedrumm] Added a check at the beginning of the script to verify that all required functions are available. This ensures the user did not copy the Generate-Microsoft-Support-Logs.ps1 script directly from GitHub. The script now requires downloading the release and cannot be run by simply copying and pasting.
 - [@blakedrumm] Added gathering currently configured Roles and Features.

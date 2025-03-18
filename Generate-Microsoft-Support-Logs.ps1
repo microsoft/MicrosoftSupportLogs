@@ -36,7 +36,7 @@
 				Piotr Walesiak (piotr.walesiak@microsoft.com)
 
 		Version: DevelopmentVersion
-		Last Modified: 13th March 2025
+		Last Modified: 18th March 2025
 		
 		MIT License
 		
@@ -97,8 +97,7 @@ param
 				 'usgovtexas', 'usgovvirginia', 'westcentralus', 'westeurope',
 			  'westindia', 'westus', 'westus2', 'westus3', 'westusstage', 'none'
 	)]
-	[string]$AzureLocation = 'none',
-	[switch]$NetworkTrace
+	[string]$AzureLocation = 'none'
 )
 BEGIN
 {
@@ -405,44 +404,6 @@ PROCESS
 {
 	Write-Console -Text "==========================================================" -NoTimestamp
 	Write-Console -Text "Starting data collection (v$version) on: $env:COMPUTERNAME" -ForegroundColor 'DarkCyan'
-	
-	#region Network Trace
-	if ($NetworkTrace)
-	{
-		# Variables
-		$TraceBasePath = "$outputFolder\NetworkTrace"
-		$TraceFilePath = "$TraceBasePath\trace.etl"
-		$TraceCabFilePath = "$TraceBasePath\trace.cab"
-		$MaxSize = 4096
-		
-		Create-Folder $TraceBasePath
-		
-		# Start the network trace
-		Write-Console "Starting network trace..." -ForegroundColor Cyan
-		Start-Process -FilePath "netsh" -ArgumentList "trace start capture=yes overwrite=yes maxsize=$MaxSize tracefile=$TraceFilePath scenario=InternetClient keywords=0xffffffffffffffff level=0xff" -NoNewWindow -Wait
-		
-		# Flush DNS cache
-		Write-Console "Flushing DNS cache..." -ForegroundColor Cyan
-		Start-Process -FilePath "ipconfig" -ArgumentList "/flushdns" -NoNewWindow -Wait
-		
-		Write-Console "Reproduce the issue now. Press Enter to stop the network trace."
-		Read-Host
-		
-		# Stop the network trace
-		Write-Console "Stopping network trace..." -ForegroundColor Cyan
-		Start-Process -FilePath "netsh" -ArgumentList "trace stop" -NoNewWindow -Wait
-		
-		# Wait for the trace to flush to disk
-		Write-Console "Waiting for the trace file to finish flushing to disk..." -ForegroundColor Cyan
-		while (-not (Test-Path $TraceCabFilePath))
-		{
-			Write-Console -NoNewLine -Text "."
-			Start-Sleep -Seconds 2
-		}
-		
-		Write-Console "Trace complete." -ForegroundColor Cyan
-	}
-	#endregion Network Trace
 	
 	
 	#region Who is running the script?
