@@ -90,15 +90,27 @@ if ($azcmagentPath)
 					if ($himdsMetadata)
 					{
 						Write-Verbose "HIMDS metadata: $himdsMetadata"
+						Write-Console -MessageSegments @(
+							@{ Text = "Using HIMDS API version: "; ForegroundColor = "Cyan" },
+							@{ Text = "$LatestApiVersion"; ForegroundColor = "Green" }
+						)
 					}
 					else
 					{
 						Write-Verbose "HIMDS metadata is unavailable."
+						Write-Console -MessageSegments @(
+							@{ Text = "HIMDS API data unavailable via the latest API version version: "; ForegroundColor = "Cyan" },
+							@{ Text = "$LatestApiVersion"; ForegroundColor = "Red" }
+						)
 					}
 				}
 				catch
 				{
 					Write-Verbose "Failed to query metadata with the latest API version. Error: $_"
+					Write-Console -MessageSegments @(
+						@{ Text = "HIMDS API data unavailable via API version: "; ForegroundColor = "Cyan" },
+						@{ Text = "$LatestApiVersion"; ForegroundColor = "Red" }
+					)
 				}
 			}
 			else
@@ -120,11 +132,26 @@ if ($azcmagentPath)
 		{
 			if ($script:VerbosePreference -match "Continue|Stop")
 			{
-				& $azcmagent check --location $himdsMetadata.location --enable-pls-check --verbose | Out-FileWithErrorHandling -Width 2048 -Encoding utf8 -Force -FilePath $AzcmagentCheckFile
+				if ($himdsMetadata.location)
+				{
+					& $azcmagent check --enable-pls-check --verbose --location $himdsMetadata.location | Out-FileWithErrorHandling -Width 2048 -Encoding utf8 -Force -FilePath $AzcmagentCheckFile
+				}
+				else
+				{
+					& $azcmagent check --enable-pls-check --verbose | Out-FileWithErrorHandling -Width 2048 -Encoding utf8 -Force -FilePath $AzcmagentCheckFile
+				}
+				
 			}
 			else
 			{
-				& $azcmagent check --location $himdsMetadata.location --enable-pls-check | Out-FileWithErrorHandling -Width 2048 -Encoding utf8 -Force -FilePath $AzcmagentCheckFile
+				if ($himdsMetadata.location)
+				{
+					& $azcmagent check --enable-pls-check --location $himdsMetadata.location | Out-FileWithErrorHandling -Width 2048 -Encoding utf8 -Force -FilePath $AzcmagentCheckFile
+				}
+				else
+				{
+					& $azcmagent check --enable-pls-check | Out-FileWithErrorHandling -Width 2048 -Encoding utf8 -Force -FilePath $AzcmagentCheckFile
+				}
 			}
 			
 		}

@@ -3,6 +3,7 @@ Create-Folder $WindowsUpdateFolder
 
 if ($GetUpdateInfo)
 {
+	Copy-File -SourcePath "$env:windir\WindowsUpdate.log" -Destination $WindowsUpdateFolder
 	$UpdateInfoPath = "$outputFolder`Update_Info.txt"
 	$UpdateInfo = $UpdateInfoPath
 	

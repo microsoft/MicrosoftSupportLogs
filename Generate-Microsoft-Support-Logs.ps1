@@ -123,7 +123,7 @@ BEGIN
 	
 	if (($version -eq ("Development" + "Version")) -and (-NOT (Test-Path "$ScriptPath\Functions")))
 	{
-		Write-Warning "Unable to continue because the script was copied from GitHub instead of downloaded from the release. Please download the latest release here: https://aka.ms/MicrosoftSupportScripts"
+		Write-Warning "Unable to continue because the script was copied from GitHub instead of downloaded from the release. Please download the latest release here: https://aka.ms/MicrosoftSupportLogs"
 		break
 	}
 	
@@ -133,7 +133,7 @@ BEGIN
 	
 	if (-NOT (Test-Path Function:\Write-Console))
 	{
-		Write-Warning "Unable to continue because the script was copied from GitHub instead of downloaded from the release. Please download the latest release here: https://aka.ms/MicrosoftSupportScripts"
+		Write-Warning "Unable to continue because the script was copied from GitHub instead of downloaded from the release. Please download the latest release here: https://aka.ms/MicrosoftSupportLogs"
 		break
 	}
 	

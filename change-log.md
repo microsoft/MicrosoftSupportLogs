@@ -1,4 +1,18 @@
-﻿# Script Version: v1.5
+﻿# Script Version: v1.6
+
+***Last Updated: March 24th, 2024 @ 11:53 AM (EST)***
+
+## Change Log
+
+#### Changes
+- [@blakedrumm] Fixed issue with `azcmagent check` command when the location is missing in the HIMDS metadata.
+- [@blakedrumm] A big thank you to Francisco Carranza for reporting this! Fixed issue with wrong URL being presented in the output when copying the script directly from GitHub: `https://aka.ms/MicrosoftSupportScripts` -> `https://aka.ms/MicrosoftSupportLogs`
+
+---
+&nbsp; \
+&nbsp;
+
+# Script Version: v1.5
 
 ***Last Updated: March 18th, 2024 @ 9:48 AM (EST)***
 
