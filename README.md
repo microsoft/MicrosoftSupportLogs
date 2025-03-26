@@ -1,5 +1,5 @@
 ## Quick Download
-[https://aka.ms/MicrosoftSupportLogs](https://aka.ms/MicrosoftSupportLogs)
+[https://aka.ms/MS_AAAP](https://aka.ms/MS_AAAP)
 
 ## About
 This PowerShell script is crafted to streamline the collection and generation of diagnostic files for Microsoft Support on Windows systems. It captures an extensive range of data, including:
@@ -11,7 +11,7 @@ This PowerShell script is crafted to streamline the collection and generation of
 - Event logs
 - And much more..
 
-All collected data is stored in the specified output folder (`C:\MicrosoftSupportLogs`).
+All collected data is stored in the specified output folder (`C:\MS_AAAP`).
 
 ### Key Features
 - **System Prerequisites Check**: Ensures TLS 1.2 support and validates regional settings for Azure automation accounts.
